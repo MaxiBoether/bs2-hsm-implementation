@@ -10,7 +10,7 @@ OBJ = hsm.o
 all: $(LIB)
 
 clean:
-        $(RM) $(LIB) $(OBJ)
+	$(RM) $(LIB) $(OBJ)
 
 $(LIB): $(OBJ)
-        $(LD) -o $@ $(LDFLAGS) $(LDADD) $^
+	$(LD) -o $@ $(LDFLAGS) $(LDADD) $^
