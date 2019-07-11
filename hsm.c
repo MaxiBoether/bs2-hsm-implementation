@@ -32,7 +32,6 @@ int open(const char *pathname, int flags, ...) {
     return res;
 }
 
-
 int close(int fd) {
     if (libc_close == NULL)
         libc_close = dlsym(RTLD_NEXT, "close");
@@ -94,6 +93,31 @@ ssize_t read(int fd, void *buf, size_t count) {
         // don't do hsm
         ssize_t res = libc_read(fd, buf, count);
         fprintf(stderr, "read %zu from %i (%s) -> %zi :: %.20s\n", count, fd, files[fd], res, (char*)buf);
+        return res;
+    }
+}
+
+int fstat(int fd, struct stat *buf) {
+    static int(*libc_fstat)(int, struct stat*) = NULL;
+    if (libc_fstat == NULL)
+        libc_fstat = dlsym(RTLD_NEXT, "fstat");
+    
+    if (!strcmp(files[fd], "file")) {
+        // hsm
+        struct stat st;
+        libc_fstat(fd, &st);
+        
+        // don't do this at home
+        char buf2[1024] = { 0 };
+        sprintf(buf2, "/tmp/%lu", st.st_ino); //unter /tmp/<inodenummer> speichern wir den tatsächlichen Inhalt
+        
+        int res = stat(buf2, buf);
+        fprintf(stderr, "hsm fstat %u => %s\n :: %i", fd, files[fd], res);
+        return res;
+    } else {
+        // nohsm
+        int res = libc_fstat(fd, buf);
+        fprintf(stderr, "fstat %u => %s\n :: %i", fd, files[fd], res);
         return res;
     }
 }
